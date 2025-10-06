@@ -20,10 +20,6 @@ def register_view(request):
             if next_url:
                 return redirect(next_url)
             return redirect('shop:product_list')
-        else:
-            for field, errors in form.errors.items():
-                for error in errors:
-                    messages.error(request, f'{field}: {error}')
     else:
         form = UserRegistrationForm()
     
@@ -48,8 +44,6 @@ def login_view(request):
                 if next_url:
                     return redirect(next_url)
                 return redirect('shop:product_list')
-        else:
-            messages.error(request, 'Invalid username or password.')
     else:
         form = UserLoginForm()
     

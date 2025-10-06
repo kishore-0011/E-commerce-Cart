@@ -1,153 +1,154 @@
 <!DOCTYPE html>
 <html lang="en" class="h-full">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Electronics Shop{% endblock %}</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        .alert-popup {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 9999;
-            min-width: 300px;
-            animation: slideIn 0.3s ease-out;
-        }
-        @keyframes slideIn {
-            from {
-                transform: translateX(400px);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-        @keyframes slideOut {
-            from {
-                transform: translateX(0);
-                opacity: 1;
-            }
-            to {
-                transform: translateX(400px);
-                opacity: 0;
-            }
-        }
-        .alert-popup.hiding {
-            animation: slideOut 0.3s ease-out;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}Electronics Shop{% endblock %}</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+<style>
+    .alert-popup {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        min-width: 300px;
+        animation: slideIn 0.3s ease-out;
+    }
+    @keyframes slideIn { from { transform: translateX(400px); opacity:0 } to { transform: translateX(0); opacity:1 } }
+    @keyframes slideOut { from { transform: translateX(0); opacity:1 } to { transform: translateX(400px); opacity:0 } }
+    .alert-popup.hiding { animation: slideOut 0.3s ease-out; }
+    html { overflow-y: scroll; }
+</style>
 </head>
 <body class="bg-gray-50 flex flex-col min-h-full">
-    <!-- Navigation -->
-    <nav class="bg-white shadow-lg sticky top-0 z-50">
-        <div class="container mx-auto px-4">
-            <div class="flex justify-between items-center py-4">
-                <a href="{% url 'shop:product_list' %}" class="text-2xl font-bold text-blue-600">
-                    <i class="fas fa-bolt"></i> ElectroShop
-                </a>
-                
-                <div class="flex items-center space-x-4">
-                    <!-- Search Bar -->
-                    <form method="get" action="{% url 'shop:product_list' %}" class="hidden md:block">
-                        <div class="relative">
-                            <input type="text" name="q" value="{{ query }}" 
-                                   placeholder="Search products..." 
-                                   class="w-64 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            <button type="submit" class="absolute right-3 top-2.5 text-gray-400 hover:text-blue-600">
-                                <i class="fas fa-search"></i>
-                            </button>
-                        </div>
-                    </form>
-                    
-                    <!-- Cart -->
-                    <a href="{% url 'shop:cart_detail' %}" class="relative">
-                        <button class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center">
-                            <i class="fas fa-shopping-cart mr-2"></i>
-                            Cart
-                            <span id="cart-count" class="ml-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs">
-                                {{ cart|length }}
-                            </span>
-                        </button>
-                    </a>
-                </div>
-            </div>
-            
-            <!-- Mobile Search -->
-            <form method="get" action="{% url 'shop:product_list' %}" class="md:hidden pb-4">
-                <div class="relative">
-                    <input type="text" name="q" value="{{ query }}" 
-                           placeholder="Search products..." 
-                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <button type="submit" class="absolute right-3 top-2.5 text-gray-400">
-                        <i class="fas fa-search"></i>
-                    </button>
-                </div>
+
+<!-- Navigation -->
+<nav class="bg-white shadow-lg sticky top-0 z-50">
+  <div class="container mx-auto px-4">
+    <div class="flex flex-col md:flex-row justify-between items-center py-4 space-y-2 md:space-y-0">
+      <!-- Logo -->
+      <a href="{% url 'shop:product_list' %}" class="text-2xl font-bold text-blue-600 flex items-center">
+        <i class="fas fa-bolt mr-1"></i> ElectroShop
+      </a>
+
+      {% if request.path != '/accounts/login/' and request.path != '/accounts/register/' %}
+      <div class="flex flex-col md:flex-row items-center w-full md:w-auto md:space-x-3 space-y-2 md:space-y-0">
+        <!-- Desktop Search -->
+        <form method="get" action="{% url 'shop:product_list' %}" class="hidden md:block md:w-auto w-full">
+          <div class="relative w-full">
+            <input type="text" name="q" value="{{ query }}" placeholder="Search products..."
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <button type="submit" class="absolute right-3 top-2.5 text-gray-400 hover:text-blue-600">
+              <i class="fas fa-search"></i>
+            </button>
+          </div>
+        </form>
+
+        <!-- Account Dropdown -->
+        <div class="relative w-full md:w-auto" x-data="{ open: false }">
+          <button @click="open = !open" 
+            class="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center hover:bg-blue-700 w-full justify-center md:min-w-[120px]">
+            <i class="fas fa-user mr-2"></i>
+            {% if user.is_authenticated %}{{ user.username }}{% else %}Account{% endif %}
+            <i class="fas fa-chevron-down ml-2 text-sm"></i>
+          </button>
+          <div x-show="open" @click.outside="open = false"
+            class="absolute right-0 mt-2 w-full md:w-44 bg-white border border-gray-200 rounded-lg shadow-lg z-50 text-sm">
+            {% if user.is_authenticated %}
+            <form action="{% url 'accounts:logout' %}" method="post">
+              {% csrf_token %}
+              <button type="submit" class="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center text-gray-700">
+                <i class="fas fa-sign-out-alt mr-2"></i> Logout
+              </button>
             </form>
+            {% else %}
+            <a href="{% url 'accounts:login' %}" class="block px-4 py-2 hover:bg-gray-100 flex items-center text-gray-700">
+              <i class="fas fa-sign-in-alt mr-2"></i> Login / Signup
+            </a>
+            {% endif %}
+          </div>
         </div>
-    </nav>
 
-    <!-- Messages -->
-    {% if messages %}
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            {% for message in messages %}
-            showAlert("{{ message|escapejs }}", "{{ message.tags }}");
-            {% endfor %}
-        });
-    </script>
-    {% endif %}
+        <!-- Cart -->
+        <a href="{% url 'shop:cart_detail' %}" class="w-full md:w-auto">
+          <button class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center justify-center w-full md:min-w-[120px]">
+            <i class="fas fa-shopping-cart mr-2"></i>Cart
+            <span id="cart-count"
+              class="ml-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs">
+              {{ cart_unique_count }}
+            </span>
+          </button>
+        </a>
+      </div>
 
-    <!-- Content -->
-    <div class="flex-grow">
-        {% block content %}{% endblock %}
+      <!-- Mobile Search -->
+      <form method="get" action="{% url 'shop:product_list' %}" class="block md:hidden pb-4 w-full">
+        <div class="relative w-full">
+          <input type="text" name="q" value="{{ query }}" placeholder="Search products..." 
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <button type="submit" class="absolute right-3 top-2.5 text-gray-400">
+            <i class="fas fa-search"></i>
+          </button>
+        </div>
+      </form>
+
+      {% endif %}
     </div>
+  </div>
+</nav>
 
-    <!-- Footer -->
-    <footer class="bg-gray-800 text-white py-8 mt-auto">
-        <div class="container mx-auto px-4 text-center">
-            <p>&copy; 2025 ElectronicShop. All rights reserved.</p>
-        </div>
-    </footer>
+<!-- Messages -->
+{% if messages %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    {% for message in messages %}
+    showAlert("{{ message|escapejs }}", "{{ message.tags }}");
+    {% endfor %}
+});
+</script>
+{% endif %}
 
-    <script>
-        function showAlert(message, type) {
-            const alertDiv = document.createElement('div');
-            alertDiv.className = 'alert-popup';
-            
-            let bgColor = 'bg-blue-500';
-            let icon = 'fa-info-circle';
-            
-            if (type === 'success') {
-                bgColor = 'bg-green-500';
-                icon = 'fa-check-circle';
-            } else if (type === 'error') {
-                bgColor = 'bg-red-500';
-                icon = 'fa-exclamation-circle';
-            } else if (type === 'warning') {
-                bgColor = 'bg-orange-500';
-                icon = 'fa-exclamation-triangle';
-            }
-            
-            alertDiv.innerHTML = `
-                <div class="${bgColor} text-white px-6 py-4 rounded-lg shadow-lg flex items-center gap-3">
-                    <i class="fas ${icon} text-2xl"></i>
-                    <span class="flex-1">${message}</span>
-                    <button onclick="this.closest('.alert-popup').remove()" class="text-white hover:text-gray-200">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-            `;
-            
-            document.body.appendChild(alertDiv);
-            
-            setTimeout(() => {
-                alertDiv.classList.add('hiding');
-                setTimeout(() => alertDiv.remove(), 300);
-            }, 3000);
-        }
-    </script>
+<!-- Content -->
+<div class="flex-grow">
+    {% block content %}{% endblock %}
+</div>
+
+<!-- Footer -->
+<footer class="bg-gray-800 text-white py-8 mt-auto">
+    <div class="container mx-auto px-4 text-center">
+        <p>&copy; 2025 ElectroShop. All rights reserved.</p>
+    </div>
+</footer>
+
+<script>
+function showAlert(message, type) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = 'alert-popup';
+    
+    let bgColor = 'bg-blue-500';
+    let icon = 'fa-info-circle';
+    
+    if (type === 'success') { bgColor = 'bg-green-500'; icon='fa-check-circle'; }
+    else if (type === 'error') { bgColor = 'bg-red-500'; icon='fa-exclamation-circle'; }
+    else if (type === 'warning') { bgColor = 'bg-orange-500'; icon='fa-exclamation-triangle'; }
+
+    alertDiv.innerHTML = `
+        <div class="${bgColor} text-white px-6 py-4 rounded-lg shadow-lg flex items-center gap-3">
+            <i class="fas ${icon} text-2xl"></i>
+            <span class="flex-1">${message}</span>
+            <button onclick="this.closest('.alert-popup').remove()" class="text-white hover:text-gray-200">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>`;
+    
+    document.body.appendChild(alertDiv);
+    setTimeout(() => {
+        alertDiv.classList.add('hiding');
+        setTimeout(() => alertDiv.remove(), 300);
+    }, 3000);
+}
+</script>
 </body>
 </html>

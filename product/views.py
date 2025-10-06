@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_POST
+from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Q
 from .models import Category, Product
@@ -7,6 +8,7 @@ from .cart import Cart
 from .froms import CartAddProductForm
 
 def product_list(request):
+    cart = Cart(request)
     products = Product.objects.filter(available=True)
     categories = Category.objects.all()
     
@@ -50,6 +52,7 @@ def product_list(request):
         'min_price': min_price or '',
         'max_price': max_price or '',
         'sort': sort or '',
+        'cart_unique_count': cart.get_unique_count(),
     }
     return render(request, 'product/product_list.html', context)
 
@@ -98,7 +101,11 @@ def cart_remove(request, product_id):
 
 def cart_detail(request):
     cart = Cart(request)
-    return render(request, 'product/cart.html', {'cart': cart})
+    context = {
+        'cart': cart,
+        'cart_unique_count': cart.get_unique_count(),  
+    }
+    return render(request, 'product/cart.html', context)
 
 @require_POST
 def cart_update_quantity(request, product_id):
@@ -151,3 +158,18 @@ def cart_update_quantity(request, product_id):
         })
     
     return redirect('shop:cart_detail')
+
+@login_required(login_url='accounts:login')
+def checkout_view(request):
+    """
+    Placeholder checkout view - requires authentication
+    """
+    cart = Cart(request)
+    
+    if len(cart) == 0:
+        messages.warning(request, 'Your cart is empty!')
+        return redirect('shop:product_list')
+    
+    # Coming soon placeholder
+    messages.info(request, 'Checkout feature coming soon!')
+    return render(request, 'product/checkout.html', {'cart': cart})

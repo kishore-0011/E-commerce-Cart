@@ -1,0 +1,167 @@
+{% extends "product/base.html" %}
+{% block title %}Products - Electronics Shop{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex flex-col md:flex-row gap-6">
+        <!-- Filters Sidebar -->
+        <aside class="w-full md:w-64 bg-white p-6 rounded-lg shadow-md h-fit">
+            <h2 class="text-xl font-bold mb-4">Filters</h2>
+            
+            <form method="get" id="filterForm">
+                <!-- Category Filter -->
+                <div class="mb-6">
+                    <h3 class="font-semibold mb-2">Categories</h3>
+                    <select name="category" class="w-full px-3 py-2 border border-gray-300 rounded-lg" onchange="this.form.submit()">
+                        <option value="">All Categories</option>
+                        {% for category in categories %}
+                        <option value="{{ category.slug }}" {% if selected_category == category.slug %}selected{% endif %}>
+                            {{ category.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <!-- Price Filter -->
+                <div class="mb-6">
+                    <h3 class="font-semibold mb-2">Price Range (₹)</h3>
+                    <div class="flex gap-2">
+                        <input type="number" name="min_price" value="{{ min_price }}" 
+                               placeholder="Min" class="w-1/2 px-3 py-2 border border-gray-300 rounded-lg">
+                        <input type="number" name="max_price" value="{{ max_price }}" 
+                               placeholder="Max" class="w-1/2 px-3 py-2 border border-gray-300 rounded-lg">
+                    </div>
+                </div>
+                
+                <!-- Sort -->
+                <div class="mb-6">
+                    <h3 class="font-semibold mb-2">Sort By</h3>
+                    <select name="sort" class="w-full px-3 py-2 border border-gray-300 rounded-lg" onchange="this.form.submit()">
+                        <option value="">Default</option>
+                        <option value="price_low" {% if sort == 'price_low' %}selected{% endif %}>Price: Low to High</option>
+                        <option value="price_high" {% if sort == 'price_high' %}selected{% endif %}>Price: High to Low</option>
+                        <option value="name" {% if sort == 'name' %}selected{% endif %}>Name: A to Z</option>
+                    </select>
+                </div>
+                
+                <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">
+                    Apply Filters
+                </button>
+                
+                {% if query or selected_category or min_price or max_price %}
+                <a href="{% url 'shop:product_list' %}" class="block w-full text-center bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300 mt-2">
+                    Clear Filters
+                </a>
+                {% endif %}
+            </form>
+        </aside>
+        
+        <!-- Products Grid -->
+        <main class="flex-1">
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-2xl font-bold">
+                    {% if query %}
+                        Search results for "{{ query }}"
+                    {% else %}
+                        All Products
+                    {% endif %}
+                </h1>
+                <p class="text-gray-600">Showing {{ products.count }} products</p>
+            </div>
+            
+            {% if products %}
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for product in products %}
+                <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow">
+                    <div class="relative">
+                        {% if product.image %}
+                        <img src="{{ product.image.url }}" alt="{{ product.name }}" class="w-full h-64 object-contain bg-white p-4">
+                        {% else %}
+                        <div class="w-full h-64 bg-gray-200 flex items-center justify-center">
+                            <i class="fas fa-image text-gray-400 text-6xl"></i>
+                        </div>
+                        {% endif %}
+                        
+                        {% if product.stock == 0 %}
+                        <span class="absolute top-2 right-2 bg-red-500 text-white px-3 py-1 rounded-full text-sm">
+                            Out of Stock
+                        </span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="p-4">
+                        <div class="text-sm text-gray-500 mb-1">{{ product.category.name }}</div>
+                        <h3 class="text-lg font-semibold mb-2 line-clamp-2">{{ product.name }}</h3>
+                        <p class="text-gray-600 text-sm mb-4 line-clamp-2">{{ product.description }}</p>
+                        
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="text-2xl font-bold text-blue-600">₹{{ product.price }}</span>
+                            <span class="text-sm text-gray-500">Stock: {{ product.stock }}</span>
+                        </div>
+                        
+                        {% if product.stock > 0 %}
+                        <form action="{% url 'shop:cart_add' product.id %}" method="post" class="add-to-cart-form">
+                            {% csrf_token %}
+                            <input type="hidden" name="quantity" value="1">
+                            <input type="hidden" name="override" value="False">
+                            <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                                <i class="fas fa-cart-plus mr-2"></i>Add to Cart
+                            </button>
+                        </form>
+                        {% else %}
+                        <button disabled class="w-full bg-gray-300 text-gray-500 py-2 rounded-lg cursor-not-allowed">
+                            Out of Stock
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-12">
+                <i class="fas fa-search text-gray-300 text-6xl mb-4"></i>
+                <p class="text-xl text-gray-600">No products found</p>
+            </div>
+            {% endif %}
+        </main>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const forms = document.querySelectorAll('.add-to-cart-form');
+    
+    forms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(form);
+            const url = form.action;
+            
+            fetch(url, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Update cart count
+                const cartCount = document.getElementById('cart-count');
+                if (cartCount) {
+                    cartCount.textContent = data.cart_count;
+                }
+                
+                // Show success popup
+                showAlert('Product added to cart!', 'success');
+            })
+            .catch(error => {
+                showAlert('Error adding to cart', 'error');
+            });
+        });
+    });
+});
+</script>
+{% endblock %}

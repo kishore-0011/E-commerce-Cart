@@ -34,12 +34,12 @@ class Cart:
                     cart_item.quantity = product.stock
                 cart_item.save()
 
-        # Replace session cart with DB cart, storing price as string
+        
         self.cart = {}
         for item in CartItem.objects.filter(user=self.user):
             self.cart[str(item.product.id)] = {
                 'quantity': item.quantity,
-                'price': str(item.product.price)  # **string**
+                'price': str(item.product.price)  
             }
         self._save_session()
 
@@ -48,7 +48,7 @@ class Cart:
         if product_id not in self.cart:
             self.cart[product_id] = {
                 'quantity': 0,
-                'price': str(product.price)  # **string**
+                'price': str(product.price)  
             }
         if override_quantity:
             self.cart[product_id]['quantity'] = quantity
@@ -85,19 +85,19 @@ class Cart:
     def __iter__(self):
         product_ids = self.cart.keys()
         products = Product.objects.filter(id__in=product_ids)
-        cart_copy = self.cart.copy()  # **work on a copy**
+        cart_copy = self.cart.copy()  
 
         for product in products:
             cart_copy[str(product.id)]['product'] = product
 
         for item in cart_copy.values():
-            item['price'] = Decimal(item['price'])  # convert for calculations only
+            item['price'] = Decimal(item['price'])  
             item['total_price'] = item['price'] * item['quantity']
             yield item
 
     def __len__(self):
         return len(self.cart.keys())
-        # return sum(item['quantity'] for item in self.cart.values())
+        
 
     def get_total_price(self):
         return sum(Decimal(item['price']) * item['quantity'] for item in self.cart.values())
@@ -117,7 +117,7 @@ class Cart:
         for product_id, item in self.cart.items():
             session_cart[product_id] = {
                 'quantity': item['quantity'],
-                'price': str(item['price'])  # ensure string
+                'price': str(item['price'])  
             }
         self.session[settings.CART_SESSION_ID] = session_cart
         self.session.modified = True

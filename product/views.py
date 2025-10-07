@@ -3,6 +3,8 @@ from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Q
+from django.http import JsonResponse
+from decimal import Decimal
 from .models import Category, Product
 from .cart import Cart
 from .froms import CartAddProductForm
@@ -72,12 +74,17 @@ def cart_add(request, product_id):
             return redirect('shop:product_list')
         
         cart.add(product=product, quantity=quantity, override_quantity=cd['override'])
-        messages.success(request, f'{product.name} added to cart!')
+        
+        
+        if not request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            messages.success(request, f'{product.name} added to cart!')
     
-    # Return JSON response for AJAX or redirect for regular form
+    # Return JSON response for AJAX
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        from django.http import JsonResponse
-        return JsonResponse({'cart_count': len(cart)})
+        return JsonResponse({
+            'cart_count': len(cart),
+            'product_name': product.name 
+        })
     
     return redirect('shop:product_list')
 
@@ -85,18 +92,22 @@ def cart_add(request, product_id):
 def cart_remove(request, product_id):
     cart = Cart(request)
     product = get_object_or_404(Product, id=product_id)
-    cart.remove(product)
-    messages.success(request, f'{product.name} removed from cart!')
+    product_name = product.name  # Store name before removing
     
-    # Return JSON response for AJAX
+    cart.remove(product)
+    
+    # For AJAX requests, don't add Django message
+    
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        from django.http import JsonResponse
         return JsonResponse({
             'success': True,
             'cart_count': len(cart),
-            'cart_total': str(cart.get_total_price())
+            'cart_total': str(cart.get_total_price()),
+            'product_name': product_name  
         })
     
+    
+    messages.success(request, f'{product_name} removed from cart!')
     return redirect('shop:cart_detail')
 
 def cart_detail(request):
@@ -118,34 +129,28 @@ def cart_update_quantity(request, product_id):
     if action == 'increase':
         new_quantity = current_quantity + 1
         if new_quantity > 10:
-            messages.error(request, 'Maximum quantity limit is 10!')
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                from django.http import JsonResponse
                 return JsonResponse({'success': False, 'error': 'Maximum quantity limit is 10!'})
+            messages.error(request, 'Maximum quantity limit is 10!')
             return redirect('shop:cart_detail')
         if new_quantity > product.stock:
-            messages.error(request, f'Only {product.stock} units available in stock!')
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                from django.http import JsonResponse
                 return JsonResponse({'success': False, 'error': f'Only {product.stock} units available in stock!'})
+            messages.error(request, f'Only {product.stock} units available in stock!')
             return redirect('shop:cart_detail')
         cart.add(product=product, quantity=new_quantity, override_quantity=True)
     
     elif action == 'decrease':
         new_quantity = current_quantity - 1
         if new_quantity < 1:
-            messages.error(request, 'Minimum quantity is 1!')
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                from django.http import JsonResponse
                 return JsonResponse({'success': False, 'error': 'Minimum quantity is 1!'})
+            messages.error(request, 'Minimum quantity is 1!')
             return redirect('shop:cart_detail')
         cart.add(product=product, quantity=new_quantity, override_quantity=True)
     
     # Return JSON response for AJAX
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        from django.http import JsonResponse
-        from decimal import Decimal
-        
         # Get updated item details
         item_total = Decimal(cart.cart[str(product_id)]['price']) * cart.cart[str(product_id)]['quantity']
         

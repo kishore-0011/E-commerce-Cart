@@ -8,18 +8,55 @@
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 <style>
-    .alert-popup {
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        z-index: 9999;
-        min-width: 300px;
-        animation: slideIn 0.3s ease-out;
-    }
-    @keyframes slideIn { from { transform: translateX(400px); opacity:0 } to { transform: translateX(0); opacity:1 } }
-    @keyframes slideOut { from { transform: translateX(0); opacity:1 } to { transform: translateX(400px); opacity:0 } }
-    .alert-popup.hiding { animation: slideOut 0.3s ease-out; }
     html { overflow-y: scroll; }
+    
+    /* Desktop Alert - Top right slide in */
+    @media (min-width: 768px) {
+        .alert-popup {
+            position: fixed;
+            top: 5rem;
+            right: 20px;
+            z-index: 9999;
+            min-width: 320px;
+            max-width: 400px;
+            animation: slideInRight 0.3s ease-out;
+        }
+        @keyframes slideInRight {
+            from { transform: translateX(400px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .alert-popup.hiding {
+            animation: slideOutRight 0.3s ease-out;
+        }
+        @keyframes slideOutRight {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(400px); opacity: 0; }
+        }
+    }
+    
+    /* Mobile Alert - Full width top banner */
+    @media (max-width: 767px) {
+        .alert-popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 9999;
+            width: 100%;
+            animation: slideInDown 0.3s ease-out;
+        }
+        @keyframes slideInDown {
+            from { transform: translateY(-100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .alert-popup.hiding {
+            animation: slideOutUp 0.3s ease-out;
+        }
+        @keyframes slideOutUp {
+            from { transform: translateY(0); opacity: 1; }
+            to { transform: translateY(-100%); opacity: 0; }
+        }
+    }
 </style>
 </head>
 <body class="bg-gray-50 flex flex-col min-h-full">
@@ -134,20 +171,42 @@ function showAlert(message, type) {
     else if (type === 'error') { bgColor = 'bg-red-500'; icon='fa-exclamation-circle'; }
     else if (type === 'warning') { bgColor = 'bg-orange-500'; icon='fa-exclamation-triangle'; }
 
-    alertDiv.innerHTML = `
-        <div class="${bgColor} text-white px-6 py-4 rounded-lg shadow-lg flex items-center gap-3">
-            <i class="fas ${icon} text-2xl"></i>
-            <span class="flex-1">${message}</span>
-            <button onclick="this.closest('.alert-popup').remove()" class="text-white hover:text-gray-200">
-                <i class="fas fa-times"></i>
-            </button>
+    // Desktop: Compact card style
+    const desktopHTML = `
+        <div class="hidden md:block ${bgColor} text-white px-5 py-3 rounded-lg shadow-xl">
+            <div class="flex items-center gap-3">
+                <i class="fas ${icon} text-xl"></i>
+                <span class="flex-1 font-medium">${message}</span>
+                <button onclick="this.closest('.alert-popup').remove()" 
+                        class="text-white hover:text-gray-200 transition-colors">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
         </div>`;
     
+    // Mobile: Full width banner
+    const mobileHTML = `
+        <div class="md:hidden ${bgColor} text-white px-4 py-4 shadow-lg">
+            <div class="flex items-start gap-3">
+                <i class="fas ${icon} text-2xl mt-0.5 flex-shrink-0"></i>
+                <div class="flex-1 min-w-0">
+                    <p class="font-semibold text-base leading-snug">${message}</p>
+                </div>
+                <button onclick="this.closest('.alert-popup').remove()" 
+                        class="text-white hover:text-gray-200 transition-colors flex-shrink-0">
+                    <i class="fas fa-times text-lg"></i>
+                </button>
+            </div>
+        </div>`;
+    
+    alertDiv.innerHTML = desktopHTML + mobileHTML;
+    
     document.body.appendChild(alertDiv);
+    
     setTimeout(() => {
         alertDiv.classList.add('hiding');
         setTimeout(() => alertDiv.remove(), 300);
-    }, 3000);
+    }, 4000);
 }
 </script>
 </body>

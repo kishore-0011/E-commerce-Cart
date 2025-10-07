@@ -6,9 +6,15 @@
     <div class="flex flex-col md:flex-row gap-6">
         <!-- Filters Sidebar -->
         <aside class="w-full md:w-64 bg-white p-6 rounded-lg shadow-md h-fit">
-            <h2 class="text-xl font-bold mb-4">Filters</h2>
-            
-            <form method="get" id="filterForm">
+            <div class="flex justify-between items-center mb-4 md:mb-6">
+                <h2 class="text-xl font-bold">Filters</h2>
+                <!-- Mobile Toggle Button -->
+                <button id="filterToggle" class="md:hidden text-blue-600 font-bold text-xl focus:outline-none">
+                    <span id="filterIcon">+</span>
+                </button>
+            </div>
+
+            <form method="get" id="filterForm" class="hidden md:block">
                 <!-- Category Filter -->
                 <div class="mb-6">
                     <h3 class="font-semibold mb-2">Categories</h3>
@@ -21,18 +27,16 @@
                         {% endfor %}
                     </select>
                 </div>
-                
+
                 <!-- Price Filter -->
                 <div class="mb-6">
                     <h3 class="font-semibold mb-2">Price Range (₹)</h3>
                     <div class="flex gap-2">
-                        <input type="number" name="min_price" value="{{ min_price }}" 
-                               placeholder="Min" class="w-1/2 px-3 py-2 border border-gray-300 rounded-lg">
-                        <input type="number" name="max_price" value="{{ max_price }}" 
-                               placeholder="Max" class="w-1/2 px-3 py-2 border border-gray-300 rounded-lg">
+                        <input type="number" name="min_price" value="{{ min_price }}" placeholder="Min" class="w-1/2 px-3 py-2 border border-gray-300 rounded-lg">
+                        <input type="number" name="max_price" value="{{ max_price }}" placeholder="Max" class="w-1/2 px-3 py-2 border border-gray-300 rounded-lg">
                     </div>
                 </div>
-                
+
                 <!-- Sort -->
                 <div class="mb-6">
                     <h3 class="font-semibold mb-2">Sort By</h3>
@@ -43,11 +47,11 @@
                         <option value="name" {% if sort == 'name' %}selected{% endif %}>Name: A to Z</option>
                     </select>
                 </div>
-                
+
                 <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">
                     Apply Filters
                 </button>
-                
+
                 {% if query or selected_category or min_price or max_price %}
                 <a href="{% url 'shop:product_list' %}" class="block w-full text-center bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300 mt-2">
                     Clear Filters
@@ -55,7 +59,7 @@
                 {% endif %}
             </form>
         </aside>
-        
+
         <!-- Products Grid -->
         <main class="flex-1">
             <div class="flex justify-between items-center mb-6">
@@ -68,7 +72,7 @@
                 </h1>
                 <p class="text-gray-600">Showing {{ products.count }} products</p>
             </div>
-            
+
             {% if products %}
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {% for product in products %}
@@ -81,24 +85,24 @@
                             <i class="fas fa-image text-gray-400 text-6xl"></i>
                         </div>
                         {% endif %}
-                        
+
                         {% if product.stock == 0 %}
                         <span class="absolute top-2 right-2 bg-red-500 text-white px-3 py-1 rounded-full text-sm">
                             Out of Stock
                         </span>
                         {% endif %}
                     </div>
-                    
+
                     <div class="p-4">
                         <div class="text-sm text-gray-500 mb-1">{{ product.category.name }}</div>
                         <h3 class="text-lg font-semibold mb-2 line-clamp-2">{{ product.name }}</h3>
                         <p class="text-gray-600 text-sm mb-4 line-clamp-2">{{ product.description }}</p>
-                        
+
                         <div class="flex items-center justify-between mb-4">
                             <span class="text-2xl font-bold text-blue-600">₹{{ product.price }}</span>
                             <span class="text-sm text-gray-500">Stock: {{ product.stock }}</span>
                         </div>
-                        
+
                         {% if product.stock > 0 %}
                         <form action="{% url 'shop:cart_add' product.id %}" method="post" class="add-to-cart-form">
                             {% csrf_token %}
@@ -127,41 +131,91 @@
     </div>
 </div>
 
+<!-- Scroll to Top Button - Desktop -->
+<button id="scrollToTopDesktop" 
+        onclick="scrollToTop()"
+        class="hidden md:flex fixed bottom-8 right-8 bg-blue-600 text-white w-14 h-14 rounded-full items-center justify-center shadow-lg hover:bg-blue-700 hover:scale-110 active:scale-95 transition-all duration-300 z-50 opacity-0 pointer-events-none">
+    <i class="fas fa-arrow-up text-xl"></i>
+</button>
+
+<!-- Scroll to Top Button - Mobile -->
+<div id="scrollToTopMobile" 
+     class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t-2 border-blue-600 shadow-lg z-50 translate-y-full transition-transform duration-300">
+    <button onclick="scrollToTop()" class="w-full py-4 flex items-center justify-center gap-2 text-blue-600 font-semibold hover:bg-blue-50 active:bg-blue-100 transition-colors">
+        <i class="fas fa-arrow-up text-lg"></i>
+        <span>Back to Top</span>
+    </button>
+</div>
+
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+// Scroll to Top
+function scrollToTop() {
+    window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+
+window.addEventListener('scroll', function() {
+    const desktopBtn = document.getElementById('scrollToTopDesktop');
+    const mobileBtn = document.getElementById('scrollToTopMobile');
+    const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+    const footer = document.querySelector('footer');
+    const windowHeight = window.innerHeight;
+    const footerTop = footer ? footer.getBoundingClientRect().top + window.scrollY : Infinity;
+
+    if(scrollY > 300){
+        desktopBtn.classList.remove('opacity-0','pointer-events-none');
+        desktopBtn.classList.add('opacity-100');
+        mobileBtn.classList.remove('translate-y-full');
+        mobileBtn.classList.add('translate-y-0');
+    } else {
+        desktopBtn.classList.add('opacity-0','pointer-events-none');
+        desktopBtn.classList.remove('opacity-100');
+        mobileBtn.classList.add('translate-y-full');
+        mobileBtn.classList.remove('translate-y-0');
+    }
+
+    // Desktop button stops before footer
+    if(footer && scrollY + windowHeight > footerTop){
+        desktopBtn.style.bottom = `${(scrollY + windowHeight) - footerTop + 16}px`;
+    } else {
+        desktopBtn.style.bottom = '2rem';
+    }
+});
+
+// Add to cart functionality
+document.addEventListener('DOMContentLoaded', function(){
     const forms = document.querySelectorAll('.add-to-cart-form');
-    
     forms.forEach(form => {
-        form.addEventListener('submit', function(e) {
+        form.addEventListener('submit', function(e){
             e.preventDefault();
-            
             const formData = new FormData(form);
             const url = form.action;
-            
             fetch(url, {
-                method: 'POST',
+                method:'POST',
                 body: formData,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
+                headers:{
+                    'X-Requested-With':'XMLHttpRequest',
                     'X-CSRFToken': formData.get('csrfmiddlewaretoken')
                 }
-            })
-            .then(response => response.json())
-            .then(data => {
-                // Update cart count
+            }).then(res => res.json())
+              .then(data => {
                 const cartCount = document.getElementById('cart-count');
-                if (cartCount) {
-                    cartCount.textContent = data.cart_count;
-                }
-                
-                // Show success popup
-                showAlert('Product added to cart!', 'success');
-            })
-            .catch(error => {
-                showAlert('Error adding to cart', 'error');
-            });
+                if(cartCount) cartCount.textContent = data.cart_count;
+                showAlert(`${data.product_name} added to cart!`, 'success');
+              }).catch(()=>showAlert('Error adding to cart','error'));
         });
     });
+
+    // Filter Toggle (mobile)
+    const toggleBtn = document.getElementById('filterToggle');
+    const filterForm = document.getElementById('filterForm');
+    const filterIcon = document.getElementById('filterIcon');
+    if(toggleBtn && filterForm){
+        toggleBtn.addEventListener('click', function(){
+            filterForm.classList.toggle('hidden');
+            filterIcon.textContent = filterForm.classList.contains('hidden') ? '+' : '−';
+        });
+    }
 });
 </script>
 {% endblock %}

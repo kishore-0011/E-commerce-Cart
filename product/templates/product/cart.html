@@ -1,69 +1,17 @@
 {% extends "product/base.html" %}
-
 {% block title %}Shopping Cart{% endblock %}
 
 {% block content %}
-<div class="container mx-auto px-4 py-8">
+<div class="container mx-auto px-4 py-8 relative">
     <h1 class="text-3xl font-bold mb-8">Shopping Cart</h1>
-    
+
     {% if cart %}
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <!-- Cart Items -->
-        <div class="lg:col-span-2" id="cart-items">
-            {% for item in cart %}
-            <div class="bg-white rounded-lg shadow-md p-6 mb-4" data-product-id="{{ item.product.id }}">
-                <div class="flex flex-col md:flex-row gap-4">
-                    <div class="w-full md:w-32 h-32 flex-shrink-0">
-                        {% if item.product.image %}
-                        <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" class="w-full h-full object-contain rounded">
-                        {% else %}
-                        <div class="w-full h-full bg-gray-200 flex items-center justify-center rounded">
-                            <i class="fas fa-image text-gray-400 text-3xl"></i>
-                        </div>
-                        {% endif %}
-                    </div>
-                    
-                    <div class="flex-1">
-                        <h3 class="text-xl font-semibold mb-2">{{ item.product.name }}</h3>
-                        <p class="text-gray-600 text-sm mb-2">{{ item.product.category.name }}</p>
-                        <p class="text-blue-600 font-bold text-lg">₹{{ item.price }}</p>
-                        <p class="text-sm text-gray-500 mt-1">Available stock: {{ item.product.stock }}</p>
-                    </div>
-                    
-                    <div class="flex flex-col justify-between items-end">
-                        <button onclick="removeFromCart({{ item.product.id }})" class="text-red-500 hover:text-red-700 text-xl">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                        
-                        <div class="mt-4 flex items-center gap-3">
-                            <button onclick="updateQuantity({{ item.product.id }}, 'decrease')" 
-                                    class="bg-gray-200 hover:bg-gray-300 text-gray-700 w-8 h-8 rounded-lg flex items-center justify-center font-bold">
-                                <i class="fas fa-minus"></i>
-                            </button>
-                            
-                            <span class="text-xl font-semibold w-12 text-center quantity-{{ item.product.id }}">{{ item.quantity }}</span>
-                            
-                            <button onclick="updateQuantity({{ item.product.id }}, 'increase')" 
-                                    class="bg-blue-600 hover:bg-blue-700 text-white w-8 h-8 rounded-lg flex items-center justify-center font-bold">
-                                <i class="fas fa-plus"></i>
-                            </button>
-                        </div>
-                        
-                        <div class="mt-4 text-right">
-                            <p class="text-sm text-gray-500">Subtotal</p>
-                            <p class="text-xl font-bold text-blue-600 item-total-{{ item.product.id }}">₹{{ item.total_price }}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-        
-        <!-- Cart Summary -->
-        <div class="lg:col-span-1">
+        <!-- Order Summary (Top on Mobile, Right on Desktop) -->
+        <div class="order-1 lg:order-2 lg:col-span-1">
             <div class="bg-white rounded-lg shadow-md p-6 sticky top-24">
                 <h2 class="text-2xl font-bold mb-4">Order Summary</h2>
-                
+
                 <div class="space-y-3 mb-6">
                     <div class="flex justify-between">
                         <span class="text-gray-600">Items (<span id="cart-items-count">{{ cart|length }}</span>)</span>
@@ -79,17 +27,69 @@
                         <span class="font-bold text-blue-600" id="cart-total">₹{{ cart.get_total_price }}</span>
                     </div>
                 </div>
-                
+
                 <a href="{% url 'shop:checkout' %}" class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 font-semibold mb-3 block text-center">
-                Proceed to Checkout
+                    Proceed to Checkout
                 </a>
-                
+
                 <a href="{% url 'shop:product_list' %}" class="block w-full text-center bg-gray-200 text-gray-700 py-3 rounded-lg hover:bg-gray-300">
                     Continue Shopping
                 </a>
             </div>
         </div>
+
+        <!-- Cart Items (Below on Mobile, Left on Desktop) -->
+        <div class="order-2 lg:order-1 lg:col-span-2" id="cart-items">
+            {% for item in cart %}
+            <div class="bg-white rounded-lg shadow-md p-6 mb-4" data-product-id="{{ item.product.id }}">
+                <div class="flex flex-col md:flex-row gap-4">
+                    <div class="w-full md:w-32 h-32 flex-shrink-0">
+                        {% if item.product.image %}
+                        <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" class="w-full h-full object-contain rounded">
+                        {% else %}
+                        <div class="w-full h-full bg-gray-200 flex items-center justify-center rounded">
+                            <i class="fas fa-image text-gray-400 text-3xl"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="flex-1">
+                        <h3 class="text-xl font-semibold mb-2">{{ item.product.name }}</h3>
+                        <p class="text-gray-600 text-sm mb-2">{{ item.product.category.name }}</p>
+                        <p class="text-blue-600 font-bold text-lg">₹{{ item.price }}</p>
+                        <p class="text-sm text-gray-500 mt-1">Available stock: {{ item.product.stock }}</p>
+                    </div>
+
+                    <div class="flex flex-col justify-between items-end">
+                        <button onclick="removeFromCart({{ item.product.id }})" class="text-red-500 hover:text-red-700 text-xl">
+                            <i class="fas fa-trash"></i>
+                        </button>
+
+                        <div class="mt-4 flex items-center gap-3">
+                            <button onclick="updateQuantity({{ item.product.id }}, 'decrease')" 
+                                    class="bg-gray-200 hover:bg-gray-300 text-gray-700 w-8 h-8 rounded-lg flex items-center justify-center font-bold">
+                                <i class="fas fa-minus"></i>
+                            </button>
+
+                            <span class="text-xl font-semibold w-12 text-center quantity-{{ item.product.id }}">{{ item.quantity }}</span>
+
+                            <button onclick="updateQuantity({{ item.product.id }}, 'increase')" 
+                                    class="bg-blue-600 hover:bg-blue-700 text-white w-8 h-8 rounded-lg flex items-center justify-center font-bold">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+
+                        <div class="mt-4 text-right">
+                            <p class="text-sm text-gray-500">Subtotal</p>
+                            <p class="text-xl font-bold text-blue-600 item-total-{{ item.product.id }}">₹{{ item.total_price }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
     </div>
+
     {% else %}
     <div class="text-center py-12">
         <i class="fas fa-shopping-cart text-gray-300 text-8xl mb-4"></i>
@@ -102,15 +102,33 @@
     {% endif %}
 </div>
 
+<!-- Scroll to Top - Desktop -->
+<button id="scrollToTopDesktop"
+    onclick="scrollToTop()"
+    class="hidden md:flex fixed bottom-8 right-8 bg-blue-600 text-white w-12 h-12 rounded-full shadow-lg items-center justify-center
+           hover:bg-blue-700 hover:scale-110 active:scale-95 transition-all duration-300 z-50 opacity-0 pointer-events-none">
+    <i class="fas fa-arrow-up text-lg"></i>
+</button>
+
+<!-- Scroll to Top - Mobile -->
+<div id="scrollToTopMobile"
+    class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t-2 border-blue-600 shadow-lg z-50 translate-y-full transition-transform duration-300">
+    <button onclick="scrollToTop()"
+        class="w-full py-4 flex items-center justify-center gap-2 text-blue-600 font-semibold hover:bg-blue-50 active:bg-blue-100 transition-colors">
+        <i class="fas fa-arrow-up text-lg"></i>
+        <span>Back to Top</span>
+    </button>
+</div>
+
 <script>
 function getCookie(name) {
     let cookieValue = null;
     if (document.cookie && document.cookie !== '') {
         const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
+        for (let i=0; i<cookies.length; i++){
             const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            if (cookie.substring(0,name.length+1)=== (name+'=')){
+                cookieValue = decodeURIComponent(cookie.substring(name.length+1));
                 break;
             }
         }
@@ -118,86 +136,89 @@ function getCookie(name) {
     return cookieValue;
 }
 
-function updateQuantity(productId, action) {
+// Update Quantity
+function updateQuantity(productId, action){
     const csrftoken = getCookie('csrftoken');
     const formData = new FormData();
     formData.append('action', action);
-    
-    fetch(`/cart/update/${productId}/`, {
-        method: 'POST',
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest',
-            'X-CSRFToken': csrftoken
-        },
+
+    fetch(`/cart/update/${productId}/`,{
+        method:'POST',
+        headers:{'X-Requested-With':'XMLHttpRequest','X-CSRFToken':csrftoken},
         body: formData
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // Update quantity display
+    .then(res=>res.json())
+    .then(data=>{
+        if(data.success){
             document.querySelector(`.quantity-${productId}`).textContent = data.quantity;
-            
-            // Update item total
-            document.querySelector(`.item-total-${productId}`).textContent = '₹' + data.item_total;
-            
-            // Update cart totals
-            document.getElementById('cart-subtotal').textContent = '₹' + data.cart_total;
-            document.getElementById('cart-total').textContent = '₹' + data.cart_total;
+            document.querySelector(`.item-total-${productId}`).textContent = '₹'+data.item_total;
+            document.getElementById('cart-subtotal').textContent = '₹'+data.cart_total;
+            document.getElementById('cart-total').textContent = '₹'+data.cart_total;
             document.getElementById('cart-items-count').textContent = data.cart_count;
-            
-            // Update header cart count
             document.getElementById('cart-count').textContent = data.cart_count;
-        } else {
-            showAlert(data.error, 'error');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showAlert('Error updating cart', 'error');
-    });
+        }else{ showAlert(data.error,'error'); }
+    }).catch(()=>showAlert('Error updating cart','error'));
 }
 
-function removeFromCart(productId) {
+// Remove from Cart
+function removeFromCart(productId){
     const csrftoken = getCookie('csrftoken');
-    
-    fetch(`/cart/remove/${productId}/`, {
-        method: 'POST',
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest',
-            'X-CSRFToken': csrftoken
-        }
+
+    fetch(`/cart/remove/${productId}/`,{
+        method:'POST',
+        headers:{'X-Requested-With':'XMLHttpRequest','X-CSRFToken':csrftoken}
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // Remove item from DOM
-            const itemElement = document.querySelector(`[data-product-id="${productId}"]`);
-            itemElement.style.transition = 'opacity 0.3s';
-            itemElement.style.opacity = '0';
-            setTimeout(() => {
-                itemElement.remove();
-                
-                // Check if cart is empty
-                if (data.cart_count === 0) {
-                    location.reload();
-                } else {
-                    // Update cart totals
-                    document.getElementById('cart-subtotal').textContent = '₹' + data.cart_total;
-                    document.getElementById('cart-total').textContent = '₹' + data.cart_total;
-                    document.getElementById('cart-items-count').textContent = data.cart_count;
-                    
-                    // Update header cart count
-                    document.getElementById('cart-count').textContent = data.cart_count;
+    .then(res=>res.json())
+    .then(data=>{
+        if(data.success){
+            const el = document.querySelector(`[data-product-id="${productId}"]`);
+            el.style.transition='opacity 0.3s';
+            el.style.opacity='0';
+            setTimeout(()=>{
+                el.remove();
+                if(data.cart_count===0) location.reload();
+                else{
+                    document.getElementById('cart-subtotal').textContent='₹'+data.cart_total;
+                    document.getElementById('cart-total').textContent='₹'+data.cart_total;
+                    document.getElementById('cart-items-count').textContent=data.cart_count;
+                    document.getElementById('cart-count').textContent=data.cart_count;
                 }
-            }, 300);
-            
-            showAlert('Product removed from cart!', 'success');
+            },300);
+            showAlert(`${data.product_name} removed from cart!`,'success');
         }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showAlert('Error removing from cart', 'error');
-    });
+    }).catch(()=>showAlert('Error removing from cart','error'));
 }
+
+// Scroll to Top
+function scrollToTop(){ window.scrollTo({top:0, behavior:'smooth'}); }
+
+window.addEventListener('scroll', function(){
+    const desktopBtn = document.getElementById('scrollToTopDesktop');
+    const mobileBtn = document.getElementById('scrollToTopMobile');
+    const scrollY = window.scrollY;
+    const footer = document.querySelector('footer');
+    const windowHeight = window.innerHeight;
+    const footerTop = footer ? footer.getBoundingClientRect().top + window.scrollY : Infinity;
+
+    // Show buttons after scrolling down 300px
+    if(scrollY>300){
+        desktopBtn.classList.remove('opacity-0','pointer-events-none');
+        desktopBtn.classList.add('opacity-100');
+        mobileBtn.classList.remove('translate-y-full');
+        mobileBtn.classList.add('translate-y-0');
+    }else{
+        desktopBtn.classList.add('opacity-0','pointer-events-none');
+        desktopBtn.classList.remove('opacity-100');
+        mobileBtn.classList.add('translate-y-full');
+        mobileBtn.classList.remove('translate-y-0');
+    }
+
+    // Prevent desktop button overlapping footer
+    if(footer && scrollY + windowHeight > footerTop){
+        desktopBtn.style.bottom = `${(scrollY + windowHeight) - footerTop + 16}px`;
+    }else{
+        desktopBtn.style.bottom = '2rem';
+    }
+});
 </script>
 {% endblock %}

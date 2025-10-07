@@ -7,7 +7,7 @@
 
     {% if cart %}
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <!-- Order Summary (Top on Mobile, Right on Desktop) -->
+        <!-- Order Summary  -->
         <div class="order-1 lg:order-2 lg:col-span-1">
             <div class="bg-white rounded-lg shadow-md p-6 sticky top-24">
                 <h2 class="text-2xl font-bold mb-4">Order Summary</h2>
@@ -38,7 +38,7 @@
             </div>
         </div>
 
-        <!-- Cart Items (Below on Mobile, Left on Desktop) -->
+        <!-- Cart Items -->
         <div class="order-2 lg:order-1 lg:col-span-2" id="cart-items">
             {% for item in cart %}
             <div class="bg-white rounded-lg shadow-md p-6 mb-4" data-product-id="{{ item.product.id }}">
@@ -110,11 +110,10 @@
     <i class="fas fa-arrow-up text-lg"></i>
 </button>
 
-<!-- Scroll to Top - Mobile -->
-<div id="scrollToTopMobile"
-    class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t-2 border-blue-600 shadow-lg z-50 translate-y-full transition-transform duration-300">
+<!-- Scroll to Top - Mobile  -->
+<div class="md:hidden mt-4">
     <button onclick="scrollToTop()"
-        class="w-full py-4 flex items-center justify-center gap-2 text-blue-600 font-semibold hover:bg-blue-50 active:bg-blue-100 transition-colors">
+        class="w-full py-4 flex items-center justify-center gap-2 text-white font-semibold bg-blue-600 hover:bg-blue-700">
         <i class="fas fa-arrow-up text-lg"></i>
         <span>Back to Top</span>
     </button>
@@ -194,29 +193,25 @@ function scrollToTop(){ window.scrollTo({top:0, behavior:'smooth'}); }
 
 window.addEventListener('scroll', function(){
     const desktopBtn = document.getElementById('scrollToTopDesktop');
-    const mobileBtn = document.getElementById('scrollToTopMobile');
     const scrollY = window.scrollY;
     const footer = document.querySelector('footer');
     const windowHeight = window.innerHeight;
     const footerTop = footer ? footer.getBoundingClientRect().top + window.scrollY : Infinity;
 
-    // Show buttons after scrolling down 300px
+    // Show desktop button after scrolling 300px
     if(scrollY>300){
         desktopBtn.classList.remove('opacity-0','pointer-events-none');
         desktopBtn.classList.add('opacity-100');
-        mobileBtn.classList.remove('translate-y-full');
-        mobileBtn.classList.add('translate-y-0');
-    }else{
+    } else {
         desktopBtn.classList.add('opacity-0','pointer-events-none');
         desktopBtn.classList.remove('opacity-100');
-        mobileBtn.classList.add('translate-y-full');
-        mobileBtn.classList.remove('translate-y-0');
     }
 
-    // Prevent desktop button overlapping footer
+    // Stop desktop button overlapping footer
     if(footer && scrollY + windowHeight > footerTop){
-        desktopBtn.style.bottom = `${(scrollY + windowHeight) - footerTop + 16}px`;
-    }else{
+        const offset = (scrollY + windowHeight) - footerTop + 16; 
+        desktopBtn.style.bottom = `${offset}px`;
+    } else {
         desktopBtn.style.bottom = '2rem';
     }
 });

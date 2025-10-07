@@ -134,56 +134,70 @@
 <!-- Scroll to Top Button - Desktop -->
 <button id="scrollToTopDesktop" 
         onclick="scrollToTop()"
-        class="hidden md:flex fixed bottom-8 right-8 bg-blue-600 text-white w-14 h-14 rounded-full items-center justify-center shadow-lg hover:bg-blue-700 hover:scale-110 active:scale-95 transition-all duration-300 z-50 opacity-0 pointer-events-none">
+        class="hidden md:flex fixed right-8 items-center justify-center w-14 h-14 rounded-full shadow-lg text-white z-50 opacity-0 pointer-events-none transition-all duration-300 bg-blue-600 hover:bg-blue-700">
     <i class="fas fa-arrow-up text-xl"></i>
 </button>
 
-<!-- Scroll to Top Button - Mobile -->
-<div id="scrollToTopMobile" 
-     class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t-2 border-blue-600 shadow-lg z-50 translate-y-full transition-transform duration-300">
-    <button onclick="scrollToTop()" class="w-full py-4 flex items-center justify-center gap-2 text-blue-600 font-semibold hover:bg-blue-50 active:bg-blue-100 transition-colors">
+<!-- Scroll to Top Button - Mobile (Static above footer) -->
+<div class="md:hidden mt-4">
+    <button onclick="scrollToTop()" class="w-full py-4 flex items-center justify-center gap-2 text-white font-semibold bg-blue-600 hover:bg-blue-700">
         <i class="fas fa-arrow-up text-lg"></i>
         <span>Back to Top</span>
     </button>
 </div>
 
+
 <script>
-// Scroll to Top
 function scrollToTop() {
     window.scrollTo({top: 0, behavior: 'smooth'});
 }
 
-
 window.addEventListener('scroll', function() {
     const desktopBtn = document.getElementById('scrollToTopDesktop');
-    const mobileBtn = document.getElementById('scrollToTopMobile');
     const scrollY = window.pageYOffset || document.documentElement.scrollTop;
     const footer = document.querySelector('footer');
     const windowHeight = window.innerHeight;
     const footerTop = footer ? footer.getBoundingClientRect().top + window.scrollY : Infinity;
 
+    // Desktop button: show after scrolling 300px
     if(scrollY > 300){
         desktopBtn.classList.remove('opacity-0','pointer-events-none');
         desktopBtn.classList.add('opacity-100');
-        mobileBtn.classList.remove('translate-y-full');
-        mobileBtn.classList.add('translate-y-0');
     } else {
         desktopBtn.classList.add('opacity-0','pointer-events-none');
         desktopBtn.classList.remove('opacity-100');
-        mobileBtn.classList.add('translate-y-full');
-        mobileBtn.classList.remove('translate-y-0');
     }
 
-    // Desktop button stops before footer
+    // Adjust desktop button to stay above footer
     if(footer && scrollY + windowHeight > footerTop){
-        desktopBtn.style.bottom = `${(scrollY + windowHeight) - footerTop + 16}px`;
+        const offset = (scrollY + windowHeight) - footerTop + 16; // 16px gap
+        desktopBtn.style.bottom = `${offset}px`;
     } else {
         desktopBtn.style.bottom = '2rem';
     }
 });
 
-// Add to cart functionality
 document.addEventListener('DOMContentLoaded', function(){
+    const scrollBtn = document.getElementById('scrollToTopStatic');
+
+    // Show button only near bottom (100px from end)
+    window.addEventListener('scroll', function(){
+        const scrollY = window.scrollY;
+        const windowHeight = window.innerHeight;
+        const docHeight = document.body.scrollHeight;
+
+        if(scrollY + windowHeight >= docHeight - 100){
+            scrollBtn.classList.remove('hidden');
+        } else {
+            scrollBtn.classList.add('hidden');
+        }
+    });
+
+    scrollBtn.addEventListener('click', function(){
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    // Add to cart functionality
     const forms = document.querySelectorAll('.add-to-cart-form');
     forms.forEach(form => {
         form.addEventListener('submit', function(e){
